@@ -1,9 +1,10 @@
 import express from "express";
-import { chatWithAI } from "../controllers/chatController.js";
+import { chatWithAI, getChatHistory } from "../controllers/chatController.js";
 
 const router = express.Router();
 
-// POST /api/chat
 router.post("/", chatWithAI);
+router.get("/history", getChatHistory);
 
 export default router;
+

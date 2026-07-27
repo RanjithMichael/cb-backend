@@ -1,34 +1,51 @@
 import fetch from "node-fetch";
+import Chat from "../models/Chat.js";
 
 export const chatWithAI = async (req, res) => {
   const { message } = req.body;
 
-  if (!message) {
-    return res.status(400).json({ error: "Message is required" });
-  }
-
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo", // or "gpt-4o-mini"
-        messages: [{ role: "user", content: message }]
-      })
-    });
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ inputs: message })
+      }
+    );
 
-    const data = await response.json();
-
-    if (!data.choices || !data.choices[0]) {
-      return res.status(500).json({ error: "Invalid response from OpenAI" });
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("❌ Hugging Face error:", text);
+      return res.status(500).json({ reply: "❌ Hugging Face request failed" });
     }
 
-    res.json({ reply: data.choices[0].message.content });
+    const data = await response.json();
+    console.log("Hugging Face raw response:", data);
+
+    let aiReply = data.generated_text || "❌ No reply from Hugging Face";
+
+    // Save to MongoDB
+    const chat = new Chat({ userMessage: message, botReply: aiReply });
+    await chat.save();
+
+    res.json({ reply: aiReply });
   } catch (err) {
-    console.error("❌ Error calling OpenAI:", err);
-    res.status(500).json({ error: "Failed to connect to OpenAI" });
+    console.error("❌ Error calling Hugging Face:", err);
+    res.status(500).json({ reply: "❌ Failed to connect to Hugging Face" });
+  }
+};
+
+// GET /api/chat/history
+export const getChatHistory = async (req, res) => {
+  try {
+    const chats = await Chat.find().sort({ createdAt: -1 }).limit(20);
+    res.json(chats);
+  } catch (err) {
+    console.error("❌ Error fetching history:", err);
+    res.status(500).json({ error: "Failed to fetch history" });
   }
 };
