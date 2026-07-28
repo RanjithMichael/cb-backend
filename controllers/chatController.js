@@ -1,8 +1,16 @@
 import fetch from "node-fetch";
-import Chat from "../models/Chat.js";
+import Chat from "../models/Chat.js";  
 
 export const chatWithAI = async (req, res) => {
+  console.log("🔥 chatWithAI called with body:", req.body);
   const { message } = req.body;
+
+  console.log("User message received:", message);
+
+  // Validate input
+  if (!message || message.trim().length === 0) {
+    return res.status(400).json({ reply: "❌ Message cannot be empty" });
+  }
 
   try {
     const response = await fetch("https://api.cohere.ai/v1/chat", {
@@ -12,15 +20,8 @@ export const chatWithAI = async (req, res) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "command-r-plus", // Cohere’s latest chat model
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: message }
-            ]
-          }
-        ]
+        model: "command-r-08-2024",
+        message: message
       })
     });
 
@@ -33,10 +34,8 @@ export const chatWithAI = async (req, res) => {
     const data = await response.json();
     console.log("Cohere raw response:", data);
 
-    // Cohere returns { message: { content: [{ text: "..." }] } }
-    let aiReply = data.message?.content?.[0]?.text || "❌ No reply from Cohere";
+    const aiReply = data.text || "❌ No reply from Cohere";
 
-    // Save to MongoDB
     const chat = new Chat({ userMessage: message, botReply: aiReply });
     await chat.save();
 
@@ -47,7 +46,6 @@ export const chatWithAI = async (req, res) => {
   }
 };
 
-// GET /api/chat/history
 export const getChatHistory = async (req, res) => {
   try {
     const chats = await Chat.find().sort({ createdAt: -1 }).limit(20);
@@ -57,5 +55,3 @@ export const getChatHistory = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch history" });
   }
 };
-
-
