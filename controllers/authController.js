@@ -44,8 +44,12 @@ export const loginUser = async (req, res) => {
 
     res.json({ token });
   } catch (err) {
-    res.status(500).json({ msg: err.message });
+  if (err.code === 11000) {
+    return res.status(400).json({ msg: "Username or email already exists" });
   }
+  res.status(400).json({ msg: err.message });
+}
+
 };
 
 // Profile
