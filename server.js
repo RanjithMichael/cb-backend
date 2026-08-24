@@ -21,7 +21,7 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Mount routes
-app.use("/auth/login", authRoutes);   // register & login
+app.use("/api/auth", authRoutes);   // register & login
 app.use("/api/chat", chatRoutes);   // protected chat routes
 
 const PORT = process.env.PORT || 5000;
