@@ -5,8 +5,6 @@ export const chatWithAI = async (req, res) => {
   console.log("🔥 chatWithAI called with body:", req.body);
   const { message } = req.body;
 
-  console.log("User message received:", message);
-
   // Validate input
   if (!message || message.trim().length === 0) {
     return res.status(400).json({ reply: "❌ Message cannot be empty" });
@@ -36,7 +34,12 @@ export const chatWithAI = async (req, res) => {
 
     const aiReply = data.text || "❌ No reply from Cohere";
 
-    const chat = new Chat({ userMessage: message, botReply: aiReply });
+    // ✅ Tie chat to logged-in user (from JWT middleware)
+    const chat = new Chat({
+      userMessage: message,
+      botReply: aiReply,
+      userId: req.user.id   // comes from decoded JWT
+    });
     await chat.save();
 
     res.json({ reply: aiReply });
@@ -48,7 +51,8 @@ export const chatWithAI = async (req, res) => {
 
 export const getChatHistory = async (req, res) => {
   try {
-    const chats = await Chat.find().sort({ createdAt: -1 }).limit(20);
+    // ✅ Only return chats for the logged-in user
+    const chats = await Chat.find({ userId: req.user.id }).sort({ createdAt: -1 });
     res.json(chats);
   } catch (err) {
     console.error("❌ Error fetching history:", err);
