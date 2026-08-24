@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { chatWithAI, getChatHistory } from "./controllers/chatController.js";
 import authRoutes from "./routes/authRoutes.js"; 
 import chatRoutes from "./routes/chatRoutes.js";  
 
@@ -23,10 +22,7 @@ app.get("/", (req, res) => {
 
 // ✅ Mount routes
 app.use("/api/auth", authRoutes);   // register & login
-app.use("/api/chat", chatRoutes);
-app.post("/api/chat", chatWithAI);  // protected route
-app.get("/api/chat/history", getChatHistory); // protected route
+app.use("/api/chat", chatRoutes);   // protected chat routes
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Chatbot backend running on port ${PORT}`));
-
