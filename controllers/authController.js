@@ -1,14 +1,5 @@
 import User from "../models/User.js";
-import jwt from "jsonwebtoken";
-
-// Helper: generate JWT
-const generateToken = (user) => {
-  return jwt.sign(
-    { id: user._id, role: user.role || "user" },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-};
+import generateToken from "../utils/generateToken.js";
 
 // Register
 export const registerUser = async (req, res) => {
@@ -26,9 +17,8 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ msg: "User already exists" });
     }
 
-    // Create new user
-    const user = new User({ username, email, password });
-    await user.save();
+    // Create new user (password will be hashed by User model pre-save hook)
+    const user = await User.create({ username, email, password });
 
     // Generate token
     const token = generateToken(user);
@@ -61,13 +51,13 @@ export const loginUser = async (req, res) => {
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ msg: "User not found" });
+      return res.status(401).json({ msg: "Invalid credentials" });
     }
 
     // Check password
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res.status(400).json({ msg: "Invalid credentials" });
+      return res.status(401).json({ msg: "Invalid credentials" });
     }
 
     // Generate token
@@ -96,7 +86,7 @@ export const getProfile = async (req, res) => {
 
     res.json(user);
   } catch (err) {
-    res.status(500).json({ msg: err.message });
+    console.error("Profile error:", err.message);
+    res.status(500).json({ msg: "Server error" });
   }
 };
-
