@@ -53,6 +53,9 @@ export const loginUser = async (req, res) => {
     if (!user) {
       return res.status(401).json({ msg: "Invalid credentials" });
     }
+    // Debug: show entered password and stored hash
+    console.log("Entered password:", password);
+    console.log("Stored hash:", user.password);
 
     // Check password
     const isMatch = await user.matchPassword(password);
