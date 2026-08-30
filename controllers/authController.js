@@ -42,6 +42,7 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log("Login attempt:", email, password);
 
     // Validate input
     if (!email || !password) {
@@ -50,6 +51,7 @@ export const loginUser = async (req, res) => {
 
     // Find user
     const user = await User.findOne({ email });
+    console.log("User found:", user);
     if (!user) {
       return res.status(401).json({ msg: "Invalid credentials" });
     }
@@ -59,12 +61,14 @@ export const loginUser = async (req, res) => {
 
     // Check password
     const isMatch = await user.matchPassword(password);
+    console.log("Password match:", isMatch);
     if (!isMatch) {
       return res.status(401).json({ msg: "Invalid credentials" });
     }
 
     // Generate token
     const token = generateToken(user);
+    console.log("Generated token:", token);
 
     res.json({
       msg: "Login successful",
@@ -76,7 +80,7 @@ export const loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Login error:", err.message);
+    console.error("Login error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
