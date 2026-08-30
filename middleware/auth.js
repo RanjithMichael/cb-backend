@@ -32,7 +32,7 @@ const auth = (roles = []) => {
 
       next();
     } catch (err) {
-      console.error("JWT Error:", err.message);
+      console.error("JWT Error:", err);
       if (err.name === "TokenExpiredError") {
         return res.status(401).json({ msg: "Token expired" });
       }

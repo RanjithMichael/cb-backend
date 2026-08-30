@@ -33,7 +33,7 @@ export const registerUser = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Register error:", err.message);
+    console.error("Register error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
@@ -84,7 +84,7 @@ export const getProfile = async (req, res) => {
 
     res.json(user);
   } catch (err) {
-    console.error("Profile error:", err.message);
+    console.error("Profile error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
