@@ -14,7 +14,7 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ msg: "User already exists" });
     }
 
-    // Create new user
+    // Create new user (password hashing handled in User.js pre-save hook)
     const user = await User.create({ username, email, password });
 
     if (user) {
@@ -48,7 +48,7 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ msg: "Invalid credentials" });
     }
 
-    // Debug logs
+    // Debug logs to trace issues
     console.log("User found:", user.email);
     console.log("Password entered:", password);
     console.log("Has matchPassword?", typeof user.matchPassword);
@@ -73,5 +73,3 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
-
-
