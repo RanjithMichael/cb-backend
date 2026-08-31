@@ -1,69 +1,67 @@
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 
-// Register
+// @desc    Register new user
+// @route   POST /api/auth/register
+// @access  Public
 export const registerUser = async (req, res) => {
+  const { username, email, password } = req.body;
+
   try {
-    const { username, email, password } = req.body;
-
-    // Validate input
-    if (!username || !email || !password) {
-      return res.status(400).json({ msg: "Username, email, and password are required" });
-    }
-
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const userExists = await User.findOne({ email });
+    if (userExists) {
       return res.status(400).json({ msg: "User already exists" });
     }
 
-    // Create new user (password will be hashed by User model pre-save hook)
+    // Create new user
     const user = await User.create({ username, email, password });
 
-    // Generate token
-    const token = generateToken(user);
-
-    res.status(201).json({
-      msg: "User registered successfully",
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-    });
+    if (user) {
+      res.status(201).json({
+        msg: "User registered successfully",
+        token: generateToken(user),
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+        },
+      });
+    } else {
+      res.status(400).json({ msg: "Invalid user data" });
+    }
   } catch (err) {
-    console.error("Register error:", err);
+    console.error("Register error stack:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
 
-// Login
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
 export const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ msg: "Email and password are required" });
-    }
+  const { email, password } = req.body;
 
-    // Find user
+  try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ msg: "Invalid credentials" });
+      return res.status(400).json({ msg: "Invalid credentials" });
     }
-    
 
-    // Check password
+    // Debug logs
+    console.log("User found:", user.email);
+    console.log("Password entered:", password);
+    console.log("Has matchPassword?", typeof user.matchPassword);
+    console.log("JWT_SECRET:", process.env.JWT_SECRET);
+
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res.status(401).json({ msg: "Invalid credentials" });
+      return res.status(400).json({ msg: "Invalid credentials" });
     }
 
-    // Generate token
-    const token = generateToken(user);
     res.json({
       msg: "Login successful",
-      token,
+      token: generateToken(user),
       user: {
         id: user._id,
         username: user.username,
@@ -76,15 +74,4 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// Profile
-export const getProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ msg: "User not found" });
 
-    res.json(user);
-  } catch (err) {
-    console.error("Profile error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
-};
