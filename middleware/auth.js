@@ -26,9 +26,9 @@ const auth = (roles = []) => {
       req.user = decoded;
 
       // Role-based access check
-      if (roles.length && !roles.includes(decoded.role)) {
-        return res.status(403).json({ msg: "Forbidden: insufficient role" });
-      }
+      if (roles.length && !roles.includes(decoded.role || "user")) {
+  return res.status(403).json({ msg: "Forbidden: insufficient role" });
+}
 
       next();
     } catch (err) {
