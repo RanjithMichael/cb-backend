@@ -31,7 +31,8 @@ export const registerUser = async (req, res) => {
       res.status(400).json({ msg: "Invalid user data" });
     }
   } catch (err) {
-    console.error("Register error stack:", err);
+    console.error("Register error message:", err.message);
+    console.error("Register error stack:", err.stack);
     res.status(500).json({ msg: "Server error" });
   }
 };
@@ -44,6 +45,7 @@ export const loginUser = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
+    console.log("matchPassword type:", typeof user.matchPassword);
     if (!user) {
       return res.status(400).json({ msg: "Invalid credentials" });
     }
@@ -69,7 +71,8 @@ export const loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Login error stack:", err);
+    console.error("Login error message:", err.message);
+    console.error("Login error stack:", err.stack);
     res.status(500).json({ msg: "Server error" });
   }
 };
